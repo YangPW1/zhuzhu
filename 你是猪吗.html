@@ -14,12 +14,13 @@
         
         body {
             background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
             position: relative;
+            padding: 20px;
         }
         
         .container {
@@ -27,30 +28,32 @@
             color: white;
             z-index: 10;
             max-width: 600px;
+            width: 100%;
             padding: 20px;
         }
         
         h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         p {
-            font-size: 1.2rem;
+            font-size: 1rem;
             margin-bottom: 30px;
             line-height: 1.6;
         }
         
         .btn {
-            padding: 12px 30px;
-            font-size: 1.2rem;
+            padding: 12px 25px;
+            font-size: 1rem;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            margin: 0 15px;
+            margin: 10px;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            min-width: 140px;
         }
         
         #yes-btn {
@@ -85,15 +88,16 @@
             z-index: 100;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         
         .modal-content {
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             text-align: center;
             max-width: 500px;
-            width: 90%;
+            width: 100%;
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
             animation: popIn 0.5s ease-out;
         }
@@ -106,12 +110,13 @@
         .modal h2 {
             color: #333;
             margin-bottom: 20px;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
         }
         
         .modal p {
             color: #666;
             margin-bottom: 25px;
+            font-size: 1rem;
         }
         
         .modal-btn {
@@ -130,7 +135,7 @@
         }
         
         .pig-emoji {
-            font-size: 4rem;
+            font-size: 3rem;
             margin-bottom: 20px;
             animation: bounce 2s infinite;
         }
@@ -142,7 +147,7 @@
         
         .floating {
             position: absolute;
-            font-size: 3rem;
+            font-size: 2rem;
             opacity: 0.1;
             z-index: 1;
             animation: float 15s infinite linear;
@@ -158,6 +163,52 @@
             justify-content: center;
             margin: 20px 0;
             flex-wrap: wrap;
+        }
+        
+        /* 适配小屏幕手机 */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+                min-width: 120px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .pig-emoji {
+                font-size: 2.5rem;
+            }
+            
+            .floating {
+                font-size: 1.5rem;
+            }
+        }
+        
+        /* 适配非常小的屏幕 */
+        @media (max-width: 360px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            p {
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+                min-width: 110px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -208,6 +259,8 @@
             
             // 跟踪按钮是否已经开始逃跑
             let isEscaping = false;
+            // 存储文本恢复定时器
+            let textResetTimer = null;
             
             // 开始按钮点击事件
             startBtn.addEventListener('click', function() {
@@ -236,6 +289,12 @@
                 noBtn.style.transform = '';
                 noBtn.style.background = '#f44336';
                 noBtn.textContent = '不是';
+                
+                // 清除任何正在运行的定时器
+                if (textResetTimer) {
+                    clearTimeout(textResetTimer);
+                    textResetTimer = null;
+                }
             }
             
             // 不是按钮鼠标悬停事件 - 让按钮开始逃跑
@@ -311,6 +370,16 @@
                 // 随机改变按钮大小
                 const randomSize = 0.8 + Math.random() * 0.6; // 0.8到1.4之间的随机大小
                 noBtn.style.transform = `scale(${randomSize})`;
+                
+                // 清除之前的定时器（如果存在）
+                if (textResetTimer) {
+                    clearTimeout(textResetTimer);
+                }
+                
+                // 设置新的定时器，2秒后恢复文本为"不是"
+                textResetTimer = setTimeout(function() {
+                    noBtn.textContent = "不是";
+                }, 1000);
             }
             
             // 防止用户通过ESC键关闭模态框
