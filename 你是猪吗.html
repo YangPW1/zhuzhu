@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户调查问卷</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .container {
+            text-align: center;
+            color: white;
+            z-index: 10;
+            max-width: 600px;
+            padding: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 0 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #yes-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        #yes-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        
+        #no-btn {
+            background: #f44336;
+            color: white;
+            position: relative; /* 初始为相对定位 */
+            transition: all 0.3s ease;
+        }
+        
+        #no-btn.escaping {
+            position: fixed; /* 逃跑时变为固定定位 */
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            animation: popIn 0.5s ease-out;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .modal p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .modal-btn {
+            padding: 10px 25px;
+            font-size: 1rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .modal-btn:hover {
+            background: #45a049;
+        }
+        
+        .pig-emoji {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .floating {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.1;
+            z-index: 1;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(100px, 100px) rotate(360deg); }
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>用户调查问卷</h1>
+        <p>感谢您参与我们的用户体验调查。请点击下方按钮开始。</p>
+        <button class="btn" id="start-btn">开始调查</button>
+    </div>
+    
+    <!-- 浮动元素作为背景装饰 -->
+    <div class="floating" style="top: 10%; left: 5%;">🐷</div>
+    <div class="floating" style="top: 20%; right: 10%;">🐖</div>
+    <div class="floating" style="bottom: 15%; left: 15%;">🐽</div>
+    <div class="floating" style="bottom: 25%; right: 5%;">🐷</div>
+    
+    <!-- 问题模态框 -->
+    <div class="modal" id="question-modal">
+        <div class="modal-content">
+            <div class="pig-emoji">🐷</div>
+            <h2>你是猪吗？</h2>
+            <p>请诚实回答这个问题，这对我们的调查非常重要。</p>
+            <div class="button-container">
+                <button class="btn" id="yes-btn">是，我是猪</button>
+                <button class="btn" id="no-btn">不是</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成功模态框 -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <div class="pig-emoji">🎉</div>
+            <h2>感谢您的诚实！</h2>
+            <p>您的回答对我们非常有价值。您已成功完成调查。</p>
+            <button class="modal-btn" id="close-btn">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('start-btn');
+            const questionModal = document.getElementById('question-modal');
+            const successModal = document.getElementById('success-modal');
+            const yesBtn = document.getElementById('yes-btn');
+            const noBtn = document.getElementById('no-btn');
+            const closeBtn = document.getElementById('close-btn');
+            
+            // 跟踪按钮是否已经开始逃跑
+            let isEscaping = false;
+            
+            // 开始按钮点击事件
+            startBtn.addEventListener('click', function() {
+                questionModal.style.display = 'flex';
+                // 重置按钮状态
+                resetNoButton();
+            });
+            
+            // 是按钮点击事件
+            yesBtn.addEventListener('click', function() {
+                questionModal.style.display = 'none';
+                successModal.style.display = 'flex';
+            });
+            
+            // 关闭按钮点击事件
+            closeBtn.addEventListener('click', function() {
+                successModal.style.display = 'none';
+            });
+            
+            // 重置"不是"按钮到初始状态
+            function resetNoButton() {
+                isEscaping = false;
+                noBtn.classList.remove('escaping');
+                noBtn.style.left = '';
+                noBtn.style.top = '';
+                noBtn.style.transform = '';
+                noBtn.style.background = '#f44336';
+                noBtn.textContent = '不是';
+            }
+            
+            // 不是按钮鼠标悬停事件 - 让按钮开始逃跑
+            noBtn.addEventListener('mouseover', function() {
+                if (!isEscaping) {
+                    startEscaping();
+                } else {
+                    moveNoButton();
+                }
+            });
+            
+            // 点击不是按钮时也让它移动
+            noBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!isEscaping) {
+                    startEscaping();
+                } else {
+                    moveNoButton();
+                }
+            });
+            
+            // 开始逃跑模式
+            function startEscaping() {
+                isEscaping = true;
+                noBtn.classList.add('escaping');
+                moveNoButton();
+            }
+            
+            // 移动"不是"按钮到随机位置
+            function moveNoButton() {
+                if (!isEscaping) return;
+                
+                const btnRect = noBtn.getBoundingClientRect();
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                
+                // 计算按钮可以移动的最大范围（考虑按钮本身的尺寸）
+                const maxX = windowWidth - btnRect.width - 20;
+                const maxY = windowHeight - btnRect.height - 20;
+                
+                // 生成随机位置
+                const randomX = Math.floor(Math.random() * maxX);
+                const randomY = Math.floor(Math.random() * maxY);
+                
+                // 应用新位置
+                noBtn.style.left = `${randomX}px`;
+                noBtn.style.top = `${randomY}px`;
+                
+                // 添加一些有趣的文本变化
+                const funnyTexts = [
+                    "别点我！",
+                    "抓不到我！",
+                    "再试一次？",
+                    "哈哈，差一点！",
+                    "我在这里！",
+                    "来抓我呀！",
+                    "好险！",
+                    "又没抓到！",
+                    "你追不到我的！",
+                    "我跑得可快了！",
+                    "继续努力！",
+                    "太慢了！"
+                ];
+                
+                const randomText = funnyTexts[Math.floor(Math.random() * funnyTexts.length)];
+                noBtn.textContent = randomText;
+                
+                // 随机改变按钮颜色
+                const colors = ['#f44336', '#ff9800', '#9c27b0', '#2196f3', '#009688', '#ff5722', '#795548'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                noBtn.style.background = randomColor;
+                
+                // 随机改变按钮大小
+                const randomSize = 0.8 + Math.random() * 0.6; // 0.8到1.4之间的随机大小
+                noBtn.style.transform = `scale(${randomSize})`;
+            }
+            
+            // 防止用户通过ESC键关闭模态框
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    // 显示一个提示
+                    alert('你必须回答问题才能关闭这个窗口！');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
